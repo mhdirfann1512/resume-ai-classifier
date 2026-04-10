@@ -4,26 +4,42 @@ from transformers import pipeline
 
 app = FastAPI()
 
-# 1. Load the model (This happens once when the server starts)
-# 'facebook/bart-large-mnli' is a top-tier model for zero-shot tasks
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+# We use a reliable, public multilingual model
+# This model is excellent for Malay and English classification
+MODEL_NAME = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
 
-# 2. Define the Request Body
+print("Loading AI Model... Please wait (This may take a few minutes on first run)")
+classifier = pipeline("zero-shot-classification", model=MODEL_NAME)
+print("AI Model Loaded Successfully!")
+
 class ResumeData(BaseModel):
     text: str
 
-# 3. Define our Department Labels
-DEPARTMENTS = ["Information Technology", "Human Resources", "Finance", "Sales", "Engineering"]
+# Your Malay Department Labels
+DEPARTMENTS = [
+    "Bahagian Pembangunan Aplikasi", 
+    "Bahagian Infrastruktur ICT", 
+    "Bahagian Keselamatan Siber", 
+    "Bahagian Pentadbiran & Kewangan",
+    "Bahagian Pembangunan Sumber Manusia"
+]
 
 @app.post("/classify")
 async def classify_resume(data: ResumeData):
-    # Perform the classification
-    result = classifier(data.text, candidate_labels=DEPARTMENTS)
+    # Perform classification
+    # We set multi_label=False to get a probability distribution that adds up to 1 (100%)
+    result = classifier(data.text, candidate_labels=DEPARTMENTS, multi_label=False)
     
-    # Return the top result
+    # Map ALL labels to their scores and sort them by highest confidence
+    full_breakdown = sorted(
+        [{"department": label, "confidence": round(score, 4)} for label, score in zip(result['labels'], result['scores'])],
+        key=lambda x: x['confidence'], 
+        reverse=True
+    )
+    
     return {
-        "department": result['labels'][0],
-        "confidence": round(result['scores'][0], 4)
+        "top_prediction": full_breakdown[0],
+        "all_predictions": full_breakdown
     }
 
 if __name__ == "__main__":
