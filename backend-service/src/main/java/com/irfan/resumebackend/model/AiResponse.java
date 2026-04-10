@@ -1,5 +1,4 @@
 package com.irfan.resumebackend.model;
-
 import lombok.Data;
 import java.util.List;
 

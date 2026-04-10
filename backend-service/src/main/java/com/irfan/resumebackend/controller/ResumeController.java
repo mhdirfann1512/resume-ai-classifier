@@ -8,9 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/resumes")
-@CrossOrigin(origins = "*") // Allows your frontend to talk to this backend
+@CrossOrigin(origins = "*")
 public class ResumeController {
-
     @Autowired
     private ResumeService resumeService;
 

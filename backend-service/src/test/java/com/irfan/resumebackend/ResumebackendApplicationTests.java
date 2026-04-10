@@ -1,10 +1,10 @@
-package com.irfan.demo;
+package com.irfan.resumebackend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DemoApplicationTests {
+class ResumebackendApplicationTests {
 
 	@Test
 	void contextLoads() {
