@@ -1,3 +1,10 @@
+
+package com.irfan.resumebackend.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "resumes")
 @Data
@@ -8,7 +15,7 @@ public class Resume {
 
     private String fileName;
     
-    @Column(columnDefinition = "TEXT") // Important: Resumes are long!
+    @Column(columnDefinition = "TEXT")
     private String extractedText;
 
     private String predictedDepartment;
