@@ -3,7 +3,29 @@ import axios from 'axios';
 import { Upload, FileText, Loader2, Database, X, BarChart3, Code, Shield, Briefcase, Info } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
-// Interface untuk rekod dari Database
+// --- 1. DYNAMIC COLOR LOGIC (Set & Forget) ---
+const getDynamicColor = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360; 
+  return {
+    main: `hsl(${h}, 70%, 45%)`,   // Warna utama
+    bg: `hsl(${h}, 85%, 96%)`,     // Warna latar lembut (pastel)
+  };
+};
+
+// --- 2. DYNAMIC ICON COMPONENT ---
+const DeptIcon = ({ dept, color, size = 16 }: { dept: string; color: string; size?: number }) => {
+  if (dept.includes('Aplikasi')) return <Code size={size} color={color} />;
+  if (dept.includes('Siber')) return <Shield size={size} color={color} />;
+  if (dept.includes('Pentadbiran') || dept.includes('Kewangan')) return <Briefcase size={size} color={color} />;
+  if (dept.includes('Infrastruktur')) return <Database size={size} color={color} />;
+  return <Info size={size} color={color} />;
+};
+
+// --- INTERFACES ---
 interface ResumeEntry {
   id: number;
   fileName: string;
@@ -13,7 +35,6 @@ interface ResumeEntry {
   allPredictionsJson: string;
 }
 
-// Interface untuk detail AI (All Predictions)
 interface Prediction {
   department: string;
   confidence: number;
@@ -38,9 +59,7 @@ const App: React.FC = () => {
     }
   };
 
-  useEffect(() => { 
-    fetchHistory(); 
-  }, []);
+  useEffect(() => { fetchHistory(); }, []);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -56,43 +75,23 @@ const App: React.FC = () => {
       fetchHistory();
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Upload gagal! Sila pastikan server Java & Python sedang berjalan.");
+      alert("Upload gagal!");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Fungsi untuk buka balik analisis dari table
   const viewDetails = (item: ResumeEntry) => {
-    try {
-      // 1. Check kalau data JSON wujud dalam DB
-      if (item.allPredictionsJson) {
-        const parsed: Prediction[] = JSON.parse(item.allPredictionsJson);
-        setSelectedResult({
-          top_prediction: { department: item.predictedDepartment, confidence: item.confidenceScore },
-          all_predictions: parsed
-        });
-      } 
-      // 2. Safety Case: Kalau rekod lama (allPredictionsJson == null)
-      else {
-        console.warn("Rekod lama dijumpai tanpa data JSON penuh.");
-        setSelectedResult({
-          top_prediction: { department: item.predictedDepartment, confidence: item.confidenceScore },
-          all_predictions: [
-            { department: item.predictedDepartment, confidence: item.confidenceScore },
-            { department: "Data Lama (Tiada Pecahan)", confidence: 1 - item.confidenceScore }
-          ]
-        });
-      }
-    } catch (error) {
-      console.error("Gagal memproses data JSON:", error);
+    if (item.allPredictionsJson) {
+      setSelectedResult({
+        top_prediction: { department: item.predictedDepartment, confidence: item.confidenceScore },
+        all_predictions: JSON.parse(item.allPredictionsJson)
+      });
     }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop, 
-    accept: {'application/pdf': ['.pdf']}, 
-    multiple: false 
+    onDrop, accept: {'application/pdf': ['.pdf']}, multiple: false 
   });
 
   return (
@@ -102,111 +101,96 @@ const App: React.FC = () => {
           <div style={logoIconStyle}><FileText size={24} color="white" /></div>
           <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700 }}>Resume Classifier AI</h1>
         </div>
-        <div style={statusBadge}>AI Model: mDeBERTa-v3</div>
+        <div style={statusBadge}>Auto-Styling Enabled</div>
       </header>
       
       <main>
-        {/* Upload Section */}
         <section style={{ marginBottom: '40px' }}>
           <div {...getRootProps()} style={isDragActive ? activeDropzoneStyle : dropzoneStyle}>
             <input {...getInputProps()} />
             {loading ? <Loader2 className="animate-spin" size={48} color="#2563eb" /> : <Upload size={48} color="#94a3b8" />}
             <h3 style={{ margin: '16px 0 8px' }}>Muat Naik & Analisis</h3>
-            <p style={{ color: '#64748b' }}>Klik mana-mana baris dalam jadual untuk lihat analisis penuh.</p>
+            <p style={{ color: '#64748b' }}>Sistem akan auto-generate warna untuk label baru.</p>
           </div>
         </section>
 
-        {/* Table Section */}
         <section>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
-            <Database size={20} color="#475569" />
-            <h2 style={{ margin: 0, fontSize: '18px' }}>Rekod Klasifikasi</h2>
-          </div>
-
           <div style={tableContainer}>
             <table style={tableStyle}>
               <thead>
                 <tr>
                   <th style={thStyle}>NAMA FAIL</th>
-                  <th style={thStyle}>KEPUTUSAN TERTINGGI</th>
-                  <th style={thStyle}>CONFIDENCE</th>
+                  <th style={thStyle}>JABATAN</th>
+                  <th style={thStyle}>KEYAKINAN</th>
                   <th style={thStyle}>TARIKH</th>
-                  <th style={thStyle}>TINDAKAN</th>
                 </tr>
               </thead>
               <tbody>
-                {history.map((item) => (
-                  <tr 
-                    key={item.id} 
-                    style={trStyle} 
-                    onClick={() => viewDetails(item)}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                  >
-                    <td style={tdStyle}>{item.fileName}</td>
-                    <td style={tdStyle}>
-                      <span style={getBadgeStyle(item.predictedDepartment)}>
-                        {item.predictedDepartment}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <strong style={{ color: item.confidenceScore > 0.7 ? '#16a34a' : '#ca8a04' }}>
-                        {(item.confidenceScore * 100).toFixed(1)}%
-                      </strong>
-                    </td>
-                    <td style={tdStyle}>
-                      {new Date(item.uploadedAt).toLocaleDateString('ms-MY')}
-                    </td>
-                    <td style={tdStyle}>
-                      <button style={viewBtn}><Info size={16} /> Detail</button>
-                    </td>
-                  </tr>
-                ))}
+                {history.map((item) => {
+                  const colors = getDynamicColor(item.predictedDepartment);
+                  return (
+                    <tr key={item.id} style={trStyle} onClick={() => viewDetails(item)}>
+                      <td style={tdStyle}>{item.fileName}</td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          backgroundColor: colors.bg,
+                          color: colors.main,
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          border: `1px solid ${colors.main}22`
+                        }}>
+                          {item.predictedDepartment}
+                        </span>
+                      </td>
+                      <td style={tdStyle}><strong>{(item.confidenceScore * 100).toFixed(1)}%</strong></td>
+                      <td style={tdStyle}>{new Date(item.uploadedAt).toLocaleDateString('ms-MY')}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </section>
       </main>
 
-      {/* --- MODAL ALL PREDICTIONS --- */}
+      {/* --- MODAL --- */}
       {selectedResult && (
         <div style={modalOverlay}>
           <div style={modalContent}>
             <div style={modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <BarChart3 color="#2563eb" />
-                <h2 style={{ margin: 0 }}>Analisis Terperinci AI</h2>
+                <h2 style={{ margin: 0 }}>Analisis Terperinci</h2>
               </div>
-              <button onClick={() => setSelectedResult(null)} style={closeBtn}><X /></button>
+              <button onClick={() => setSelectedResult(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X /></button>
             </div>
 
-            <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>
-              Berikut adalah pecahan kebarangkalian bagi jabatan tersebut:
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {selectedResult.all_predictions.map((pred, index) => (
-                <div key={index}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {pred.department.includes('Aplikasi') && <Code size={14} color="#2563eb" />}
-                      {pred.department.includes('Siber') && <Shield size={14} color="#ef4444" />}
-                      {pred.department.includes('Pentadbiran') && <Briefcase size={14} color="#f59e0b" />}
-                      <span style={{ fontWeight: index === 0 ? 700 : 400 }}>{pred.department}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {selectedResult.all_predictions.map((pred, index) => {
+                const colors = getDynamicColor(pred.department);
+                return (
+                  <div key={index}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <DeptIcon dept={pred.department} color={colors.main} />
+                        <span style={{ fontWeight: index === 0 ? 700 : 400 }}>{pred.department}</span>
+                      </div>
+                      <span style={{ fontWeight: 600 }}>{(pred.confidence * 100).toFixed(1)}%</span>
                     </div>
-                    <span style={{ fontWeight: 600 }}>{(pred.confidence * 100).toFixed(2)}%</span>
+                    <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ 
+                        width: `${pred.confidence * 100}%`, 
+                        height: '100%', 
+                        backgroundColor: colors.main, 
+                        transition: 'width 0.8s ease' 
+                      }} />
+                    </div>
                   </div>
-                  <div style={progressBarBg}>
-                    <div style={{ 
-                      ...progressBarFill, 
-                      width: `${pred.confidence * 100}%`,
-                      backgroundColor: index === 0 ? '#2563eb' : '#cbd5e1'
-                    }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-
             <button onClick={() => setSelectedResult(null)} style={confirmBtn}>Tutup</button>
           </div>
         </div>
@@ -216,31 +200,20 @@ const App: React.FC = () => {
 };
 
 // --- STYLES ---
-const containerStyle: React.CSSProperties = { maxWidth: '1100px', margin: '0 auto', padding: '40px 20px', fontFamily: '"Inter", sans-serif' };
+const containerStyle: React.CSSProperties = { maxWidth: '1000px', margin: '0 auto', padding: '40px 20px', fontFamily: '"Inter", sans-serif' };
 const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' };
-const logoIconStyle: React.CSSProperties = { backgroundColor: '#2563eb', padding: '8px', borderRadius: '8px', marginRight: '12px' };
-const statusBadge: React.CSSProperties = { backgroundColor: '#f0fdf4', color: '#166534', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, border: '1px solid #bbf7d0' };
-const dropzoneStyle: React.CSSProperties = { border: '2px dashed #e2e8f0', borderRadius: '16px', padding: '48px', textAlign: 'center', cursor: 'pointer', backgroundColor: '#ffffff' };
-const activeDropzoneStyle: React.CSSProperties = { ...dropzoneStyle, borderColor: '#2563eb', backgroundColor: '#eff6ff' };
-const tableContainer: React.CSSProperties = { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' };
+const logoIconStyle: React.CSSProperties = { backgroundColor: '#2563eb', padding: '8px', borderRadius: '8px' };
+const statusBadge: React.CSSProperties = { backgroundColor: '#f0f9ff', color: '#0369a1', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 };
+const dropzoneStyle: React.CSSProperties = { border: '2px dashed #e2e8f0', borderRadius: '16px', padding: '40px', textAlign: 'center', cursor: 'pointer', backgroundColor: '#fff' };
+const activeDropzoneStyle: React.CSSProperties = { ...dropzoneStyle, borderColor: '#2563eb', backgroundColor: '#f8fafc' };
+const tableContainer: React.CSSProperties = { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' };
 const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
 const thStyle: React.CSSProperties = { textAlign: 'left', padding: '16px', fontSize: '12px', color: '#64748b', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' };
 const tdStyle: React.CSSProperties = { padding: '16px', fontSize: '14px', borderBottom: '1px solid #f1f5f9' };
 const trStyle: React.CSSProperties = { cursor: 'pointer', transition: 'background 0.2s' };
-const viewBtn: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', color: '#475569' };
-
-const getBadgeStyle = (dept: string): React.CSSProperties => ({
-  backgroundColor: dept.includes('Aplikasi') ? '#dbeafe' : dept.includes('Siber') ? '#fee2e2' : '#fef9c3',
-  color: dept.includes('Aplikasi') ? '#1e40af' : dept.includes('Siber') ? '#991b1b' : '#854d0e',
-  padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600
-});
-
 const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 };
-const modalContent: React.CSSProperties = { backgroundColor: 'white', padding: '30px', borderRadius: '16px', width: '450px' };
-const modalHeader: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' };
-const closeBtn: React.CSSProperties = { border: 'none', background: 'none', cursor: 'pointer' };
-const progressBarBg: React.CSSProperties = { width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px' };
-const progressBarFill: React.CSSProperties = { height: '100%', borderRadius: '4px', transition: 'width 0.8s' };
-const confirmBtn: React.CSSProperties = { marginTop: '30px', width: '100%', padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' };
+const modalContent: React.CSSProperties = { backgroundColor: 'white', padding: '30px', borderRadius: '16px', width: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' };
+const modalHeader: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' };
+const confirmBtn: React.CSSProperties = { marginTop: '30px', width: '100%', padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' };
 
 export default App;
