@@ -14,10 +14,33 @@ public class ResumeService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public AiResponse processResume(MultipartFile file) throws Exception {
-        String extractedText = tika.parseToString(file.getInputStream());
-        String pythonUrl = "http://localhost:8000/classify";
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("text", extractedText);
-        return restTemplate.postForObject(pythonUrl, requestBody, AiResponse.class);
+        try {
+            System.out.println(">>> [STEP 1] Received file: " + file.getOriginalFilename());
+            
+            // Extract text using Apache Tika
+            String extractedText = tika.parseToString(file.getInputStream());
+            System.out.println(">>> [STEP 2] Extracted text length: " + extractedText.length());
+
+            if (extractedText.trim().isEmpty()) {
+                System.out.println(">>> [WARNING] Extracted text is EMPTY. Check if the PDF is scanned as an image.");
+            }
+
+            String pythonUrl = "http://localhost:8000/classify";
+            Map<String, String> requestBody = new HashMap<>();
+            requestBody.put("text", extractedText);
+
+            System.out.println(">>> [STEP 3] Sending request to Python at: " + pythonUrl);
+            
+            // Call the Python AI Service
+            AiResponse response = restTemplate.postForObject(pythonUrl, requestBody, AiResponse.class);
+            
+            System.out.println(">>> [STEP 4] Received response from Python!");
+            return response;
+
+        } catch (Exception e) {
+            System.err.println(">>> [CRITICAL ERROR] Error during processing: " + e.getMessage());
+            e.printStackTrace(); // This will finally show the red lines in your terminal
+            throw e;
+        }
     }
 }
