@@ -20,8 +20,11 @@ DEPARTMENTS = [
     "Bahagian Pembangunan Aplikasi", 
     "Bahagian Infrastruktur ICT", 
     "Bahagian Keselamatan Siber", 
-    "Bahagian Pentadbiran & Kewangan",
-    "Bahagian Pembangunan Sumber Manusia"
+    "Bahagian Kewangan dan Akaun",
+    "Bahagian Pembangunan Sumber Manusia",
+    "Bahagian Operasi Teknikal",
+    "Bahagian Rangkaian dan Komunikasi Digital",
+    "Bahagian Infrastruktur Pusat Data"
 ]
 
 @app.post("/classify")
