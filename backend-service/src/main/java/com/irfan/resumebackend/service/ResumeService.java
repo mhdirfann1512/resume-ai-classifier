@@ -1,10 +1,16 @@
 package com.irfan.resumebackend.service;
 
 import com.irfan.resumebackend.model.AiResponse;
+
+import main.java.com.irfan.repository.ResumeRepository;
+import main.java.com.irfan.resumebackend.model.Resume;
+
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +18,9 @@ import java.util.Map;
 public class ResumeService {
     private final Tika tika = new Tika();
     private final RestTemplate restTemplate = new RestTemplate();
+   
+    @Autowired
+    private ResumeRepository resumeRepository;
 
     public AiResponse processResume(MultipartFile file) throws Exception {
         try {
@@ -35,6 +44,18 @@ public class ResumeService {
             AiResponse response = restTemplate.postForObject(pythonUrl, requestBody, AiResponse.class);
             
             System.out.println(">>> [STEP 4] Received response from Python!");
+
+            // After getting 'response' from Python...
+            Resume resume = new Resume();
+            resume.setFileName(file.getOriginalFilename());
+            resume.setExtractedText(extractedText);
+            resume.setPredictedDepartment(response.getTop_prediction().getDepartment());
+            resume.setConfidenceScore(response.getTop_prediction().getConfidence());
+            resume.setUploadedAt(LocalDateTime.now());
+
+            // Save to Database
+            resumeRepository.save(resume);
+            
             return response;
 
         } catch (Exception e) {
