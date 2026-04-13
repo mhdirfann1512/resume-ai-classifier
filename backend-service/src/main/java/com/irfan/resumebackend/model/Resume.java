@@ -1,4 +1,3 @@
-
 package com.irfan.resumebackend.model;
 
 import jakarta.persistence.*;
@@ -7,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "resumes")
-@Data
+@Data // Lombok buat getters/setters automatik
 public class Resume {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,5 +19,10 @@ public class Resume {
 
     private String predictedDepartment;
     private Double confidenceScore;
+
+    // TAMBAH NI: Untuk simpan list penuh JSON dari AI
+    @Column(columnDefinition = "TEXT")
+    private String allPredictionsJson; 
+
     private LocalDateTime uploadedAt;
 }
