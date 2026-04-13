@@ -20,9 +20,12 @@ public class Resume {
     private String predictedDepartment;
     private Double confidenceScore;
 
-    // TAMBAH NI: Untuk simpan list penuh JSON dari AI
+    private String status;
+
     @Column(columnDefinition = "TEXT")
     private String allPredictionsJson; 
 
     private LocalDateTime uploadedAt;
+
+
 }
