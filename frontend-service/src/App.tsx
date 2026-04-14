@@ -49,6 +49,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedResult, setSelectedResult] = useState<AiResponse | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+  const [showAbout, setShowAbout] = useState<boolean>(false); // State baru untuk Info
+
 
   const fetchHistory = async () => {
     try {
@@ -109,11 +111,24 @@ const App: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={logoIconStyle}><FileText size={24} color="white" /></div>
           <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 800, letterSpacing: '-0.5px' }}>Resume Classifier AI</h1>
+          
+          <button 
+            onClick={() => setShowAbout(true)} 
+            style={infoBtnStyle}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
+          >
+            <Info size={20} color="#2563eb" />
+          </button>
         </div>
         <div style={statusBadge}>mDeBERTa-v3</div>
       </header>
       
-      <main>
+      <main style={{ 
+        filter: (showAbout || selectedResult) ? 'blur(8px)' : 'none', 
+        transition: 'filter 0.3s ease',
+        pointerEvents: (showAbout || selectedResult) ? 'none' : 'auto'
+      }}>
         {/* SECTION 1: UPLOAD AREA WITH GLOW & LIFT */}
         <section style={{ marginBottom: '40px' }}>
           <div 
@@ -267,6 +282,29 @@ const App: React.FC = () => {
         </section>
       </main>
 
+            {/* MODAL ABOUT / INFO */}
+      {showAbout && (
+        <div style={modalOverlay} onClick={() => setShowAbout(false)}>
+          <div style={aboutModalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '10px', backgroundColor: '#eff6ff', borderRadius: '14px' }}>
+                   <Database color="#2563eb" size={22} />
+                </div>
+                <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>Mengenai Sistem</h2>
+              </div>
+              <button onClick={() => setShowAbout(false)} style={closeBtn}><X size={20}/></button>
+            </div>
+            <div style={aboutTextStyle}>
+              <p><strong>Resume Classifier AI</strong> adalah aplikasi pintar untuk pengisihan resume secara automatik menggunakan model <strong>NLP mDeBERTa-v3</strong>.</p>
+              <p>Ia menganalisis teks dalam PDF untuk meramalkan jabatan yang paling sesuai berdasarkan kemahiran dan pengalaman calon.</p>
+              <p>Sistem ini menyokong pemprosesan <em>asynchronous</em>, membolehkan anda memuat naik banyak resume serentak tanpa perlu menunggu setiap satu selesai.</p>
+            </div>
+            <button onClick={() => setShowAbout(false)} style={confirmBtn}>Faham & Teruskan</button>
+          </div>
+        </div>
+      )}
+
       {/* MODAL WITH GLASSMORPHISM & SLIDE EFFECT */}
       {selectedResult && (
         <div style={modalOverlay}>
@@ -350,6 +388,8 @@ const containerStyle: React.CSSProperties = { maxWidth: '1000px', margin: '0 aut
 const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' };
 const logoIconStyle: React.CSSProperties = { backgroundColor: '#2563eb', padding: '12px', borderRadius: '14px', marginRight: '16px', boxShadow: '0 8px 16px -4px rgba(37, 99, 235, 0.4)' };
 const statusBadge: React.CSSProperties = { backgroundColor: '#f0f9ff', color: '#0369a1', padding: '8px 18px', borderRadius: '24px', fontSize: '12px', fontWeight: 800, border: '1px solid #bae6fd' };
+const infoBtnStyle: React.CSSProperties = { border: 'none', background: '#eff6ff', padding: '8px', borderRadius: '12px', marginLeft: '12px',cursor: 'pointer', transition: 'all 0.3s ease' };
+
 
 const dropzoneStyle: React.CSSProperties = { 
   border: '2px dashed #e2e8f0', borderRadius: '28px', padding: '60px', textAlign: 'center', 
@@ -403,8 +443,10 @@ const badgeStyle: React.CSSProperties = { padding: '6px 14px', borderRadius: '10
 
 const modalOverlay: React.CSSProperties = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, animation: 'fadeIn 0.3s ease' };
 const modalContent: React.CSSProperties = { backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '450px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)' };
+const aboutModalContent: React.CSSProperties = { ...modalContent, width: '550px' };
 const modalHeader: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginBottom: '32px', alignItems: 'center' };
 const closeBtn: React.CSSProperties = { border: 'none', background: '#f1f5f9', padding: '10px', borderRadius: '50%', cursor: 'pointer', color: '#64748b', transition: 'all 0.2s' };
 const confirmBtn: React.CSSProperties = { marginTop: '40px', width: '100%', padding: '18px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '18px', fontWeight: 700, fontSize: '16px', cursor: 'pointer', transition: 'all 0.3s' };
+const aboutTextStyle: React.CSSProperties = { fontSize: '16px', lineHeight: '1.7', color: '#475569' };
 
 export default App;
