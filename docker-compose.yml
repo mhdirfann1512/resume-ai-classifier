@@ -1,5 +1,5 @@
 services:
-  # --- DATABASE ---
+  # --- 1. DATABASE (POSTGRESQL) ---
   db:
     image: postgres:15
     container_name: resume-db
@@ -9,25 +9,31 @@ services:
       POSTGRES_DB: resumedb
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d resumedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # --- AI SERVICE (PYTHON) ---
+  # --- 2. AI SERVICE (PYTHON) ---
   ai-service:
-    build: ./python-folder-kau # Ganti dengan nama folder python kau
+    build: ./ai-service  # Pastikan nama folder ni betul
     container_name: ai-service
     ports:
       - "8000:8000"
-    depends_on:
-      - db
+    restart: always
 
-  # --- BACKEND (JAVA) ---
-  backend:
-    build: ./java-folder-kau # Ganti dengan nama folder java kau
-    container_name: java-backend
+  # --- 3. BACKEND SERVICE (JAVA) ---
+  backend-service:
+    build: ./backend-service # Pastikan nama folder ni betul
+    container_name: backend-service
     ports:
       - "8080:8080"
     environment:
-      # PENTING: Guna nama service 'db' dan 'ai-service'
+      # Kita override application.properties guna ni:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/resumedb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
       AI_SERVICE_URL: http://ai-service:8000/classify
     depends_on:
       db:

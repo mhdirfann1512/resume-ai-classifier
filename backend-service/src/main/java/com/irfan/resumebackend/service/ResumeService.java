@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Async; // Wajib ada
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 import org.apache.tika.Tika;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -22,7 +23,9 @@ public class ResumeService {
     private final ObjectMapper objectMapper = new ObjectMapper(); 
     private final Tika tika = new Tika();
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String PYTHON_SERVICE_URL = "http://localhost:8000/classify";
+
+    @Value("${AI_SERVICE_URL:http://localhost:8000/classify}")
+    private String pythonServiceUrl; // Buang final, dan aku cadangkan guna camelCase
 
     // LANGKAH 1: Simpan rekod kosong dulu supaya user nampak kat table
     public Resume saveInitial(MultipartFile file) {
@@ -41,7 +44,7 @@ public class ResumeService {
             String extractedText = tika.parseToString(file.getInputStream());
             
             // 2. Call Python AI
-            AiResponse response = restTemplate.postForObject(PYTHON_SERVICE_URL, Map.of("text", extractedText), AiResponse.class);
+            AiResponse response = restTemplate.postForObject(pythonServiceUrl, Map.of("text", extractedText), AiResponse.class);
 
             // 3. Update data yang kita simpan tadi
             Resume resume = resumeRepository.findById(id).orElseThrow();
