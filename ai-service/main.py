@@ -18,13 +18,18 @@ class ResumeData(BaseModel):
 # Your Malay Department Labels
 DEPARTMENTS = [
     "Bahagian Pembangunan Aplikasi", 
-    "Bahagian Infrastruktur ICT", 
+    "Bahagian Pelaksanaan Strategik ICT", 
     "Bahagian Keselamatan Siber", 
     "Bahagian Kewangan dan Akaun",
     "Bahagian Pembangunan Sumber Manusia",
     "Bahagian Operasi Teknikal",
     "Bahagian Rangkaian dan Komunikasi Digital",
-    "Bahagian Infrastruktur Pusat Data"
+    "Bahagian Infrastruktur Pusat Data",
+    "Bahagian Korporat dan Kualiti",
+    "Bahagian Dasar dan Pematuhan",
+    "Bahagian Kecerdasan Digital",
+    "Bahagian Transformasi Digital",
+    "Bahagian Perundingan ICT"
 ]
 
 @app.post("/classify")
