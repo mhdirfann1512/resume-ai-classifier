@@ -8,7 +8,6 @@ import java.util.List;
 @Repository
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
     
-    // Fungsi ni akan auto-generate SQL: SELECT * FROM resumes ORDER BY id DESC
     // Jadi resume yang Irfan baru upload akan sentiasa duduk paling atas dalam table
     List<Resume> findAllByOrderByIdDesc();
 }
