@@ -110,7 +110,7 @@ const App: React.FC = () => {
           <div style={logoIconStyle}><FileText size={24} color="white" /></div>
           <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 800, letterSpacing: '-0.5px' }}>Resume Classifier AI</h1>
         </div>
-        <div style={statusBadge}>Enterprise Edition</div>
+        <div style={statusBadge}>mDeBERTa-v3</div>
       </header>
       
       <main>
@@ -176,14 +176,14 @@ const App: React.FC = () => {
 
         {/* SECTION 3: TABLE WITH ROW HOVER & CLICK EFFECT */}
         <section>
-          <div style={tableContainer}>
-            <table style={tableStyle}>
+          <div style={tableContainer}><table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>FILE NAME</th>
-                  <th style={thStyle}>STATUS / RESULT</th>
-                  <th style={thStyle}>CONFIDENCE</th>
-                  <th style={thStyle}>UPLOADED AT</th>
+                  {/* Kita set lebar column secara spesifik kat sini */}
+                  <th style={{ ...thStyle, width: '30%' }}>FILE NAME</th>
+                  <th style={{ ...thStyle, width: '40%' }}>STATUS / RESULT</th>
+                  <th style={{ ...thStyle, width: '15%' }}>CONFIDENCE</th>
+                  <th style={{ ...thStyle, width: '15%' }}>UPLOADED AT</th>
                 </tr>
               </thead>
               <tbody>
@@ -205,7 +205,12 @@ const App: React.FC = () => {
                         e.currentTarget.style.zIndex = '1';
                       }}
                     >
-                      <td style={{ ...tdStyle, fontWeight: 500 }}>{item.fileName}</td>
+                      {/* FILE NAME: Letak title supaya bila hover nampak nama penuh */}
+                      <td style={{ ...tdStyle, fontWeight: 500 }} title={item.fileName}>
+                        {item.fileName}
+                      </td>
+
+                      {/* STATUS/RESULT: Sekarang ruang lebih luas, takkan wrap ke bawah */}
                       <td style={tdStyle}>
                         {item.status === 'PROCESSING' ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb' }}>
@@ -220,6 +225,7 @@ const App: React.FC = () => {
                         ) : (
                           <span style={{ 
                             ...badgeStyle, 
+                            //display: 'inline-block', // Pastikan badge tak pecah
                             backgroundColor: colors.bg, 
                             color: colors.main, 
                             border: `1px solid ${colors.main}33`,
@@ -229,17 +235,21 @@ const App: React.FC = () => {
                           </span>
                         )}
                       </td>
+
                       <td style={tdStyle}>
                          {item.status === 'COMPLETED' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                               <div style={{ width: '40px', height: '4px', background: '#e2e8f0', borderRadius: '2px' }}>
+                               <div style={{ width: '40px', height: '4px', background: '#e2e8f0', borderRadius: '2px', flexShrink: 0 }}>
                                   <div style={{ width: `${item.confidenceScore * 100}%`, height: '100%', background: colors.main, borderRadius: '2px' }} />
                                </div>
-                               <strong>{(item.confidenceScore * 100).toFixed(1)}%</strong>
+                               <strong style={{ fontSize: '12px' }}>{(item.confidenceScore * 100).toFixed(1)}%</strong>
                             </div>
                          ) : '-'}
                       </td>
-                      <td style={{ ...tdStyle, color: '#64748b' }}>{new Date(item.uploadedAt).toLocaleString('ms-MY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+
+                      <td style={{ ...tdStyle, color: '#64748b' }}>
+                        {new Date(item.uploadedAt).toLocaleString('ms-MY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </td>
                     </tr>
                   );
                 })}
@@ -354,10 +364,40 @@ const activeTabBtn: React.CSSProperties = { ...baseTabBtn, backgroundColor: '#ff
 const inactiveTabBtn: React.CSSProperties = { ...baseTabBtn, backgroundColor: 'transparent', color: '#64748b' };
 const badgeCount: React.CSSProperties = { backgroundColor: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', marginLeft: '6px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)' };
 
-const tableContainer: React.CSSProperties = { backgroundColor: '#fff', borderRadius: '24px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' };
-const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '20px', fontSize: '11px', color: '#64748b', backgroundColor: '#f8fafc', fontWeight: 800, letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' };
-const tdStyle: React.CSSProperties = { padding: '20px', fontSize: '14px', borderBottom: '1px solid #f1f5f9' };
+// --- UPDATED TABLE STYLES ---
+const tableContainer: React.CSSProperties = { 
+  backgroundColor: '#fff', 
+  borderRadius: '24px', 
+  border: '1px solid #e2e8f0', 
+  overflow: 'hidden', 
+  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' 
+};
+
+const tableStyle: React.CSSProperties = { 
+  width: '100%', 
+  borderCollapse: 'collapse',
+  tableLayout: 'fixed' // Kunci layout table
+};
+
+const thStyle: React.CSSProperties = { 
+  textAlign: 'left', 
+  padding: '20px', 
+  fontSize: '11px', 
+  color: '#64748b', 
+  backgroundColor: '#f8fafc', 
+  fontWeight: 800, 
+  letterSpacing: '0.05em', 
+  borderBottom: '1px solid #e2e8f0' 
+};
+
+const tdStyle: React.CSSProperties = { 
+  padding: '20px', 
+  fontSize: '14px', 
+  borderBottom: '1px solid #f1f5f9',
+  // whiteSpace: 'nowrap',    // Elakkan teks turun bawah
+  //overflow: 'hidden',      // Sorok teks lebih
+  //textOverflow: 'ellipsis' // Letak "..." kalau panjang sangat
+};
 const trStyle: React.CSSProperties = { cursor: 'pointer', transition: 'all 0.2s ease', position: 'relative' };
 const badgeStyle: React.CSSProperties = { padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 800, transition: 'all 0.3s ease' };
 
