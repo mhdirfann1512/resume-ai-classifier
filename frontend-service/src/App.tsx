@@ -326,30 +326,33 @@ const App: React.FC = () => {
               </button>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {selectedResult.all_predictions.map((pred, i) => {
-                const c = getDynamicColor(pred.department);
-                return (
-                  <div key={i} style={{ animation: `slideIn 0.3s ease forwards ${i * 0.1}s`, opacity: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <DeptIcon dept={pred.department} color={c.main} size={20} />
-                        <span style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>{pred.department}</span>
+            {/* TAMBAHKAN DIV WRAPPER INI UNTUK SCROLL */}
+            <div style={predictionListContainer}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', paddingRight: '8px' }}>
+                {selectedResult.all_predictions.map((pred, i) => {
+                  const c = getDynamicColor(pred.department);
+                  return (
+                    <div key={i} style={{ animation: `slideIn 0.3s ease forwards ${i * 0.1}s`, opacity: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <DeptIcon dept={pred.department} color={c.main} size={20} />
+                          <span style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>{pred.department}</span>
+                        </div>
+                        <strong style={{ fontSize: '15px', color: c.main }}>{(pred.confidence * 100).toFixed(1)}%</strong>
                       </div>
-                      <strong style={{ fontSize: '15px', color: c.main }}>{(pred.confidence * 100).toFixed(1)}%</strong>
+                      <div style={{ height: '10px', background: '#f1f5f9', borderRadius: '5px', overflow: 'hidden', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)' }}>
+                        <div style={{ 
+                          width: `${pred.confidence * 100}%`, 
+                          height: '100%', 
+                          background: c.main,
+                          boxShadow: `0 0 12px ${c.glow}`,
+                          transition: 'width 1s cubic-bezier(0.22, 1, 0.36, 1)'
+                        }} />
+                      </div>
                     </div>
-                    <div style={{ height: '10px', background: '#f1f5f9', borderRadius: '5px', overflow: 'hidden', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)' }}>
-                      <div style={{ 
-                        width: `${pred.confidence * 100}%`, 
-                        height: '100%', 
-                        background: c.main,
-                        boxShadow: `0 0 12px ${c.glow}`,
-                        transition: 'width 1s cubic-bezier(0.22, 1, 0.36, 1)'
-                      }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
 
             <button 
@@ -389,13 +392,15 @@ const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'spa
 const logoIconStyle: React.CSSProperties = { backgroundColor: '#2563eb', padding: '12px', borderRadius: '14px', marginRight: '16px', boxShadow: '0 8px 16px -4px rgba(37, 99, 235, 0.4)' };
 const statusBadge: React.CSSProperties = { backgroundColor: '#f0f9ff', color: '#0369a1', padding: '8px 18px', borderRadius: '24px', fontSize: '12px', fontWeight: 800, border: '1px solid #bae6fd' };
 const infoBtnStyle: React.CSSProperties = { border: 'none', background: '#eff6ff', padding: '8px', borderRadius: '12px', marginLeft: '12px',cursor: 'pointer', transition: 'all 0.3s ease' };
-
-
-const dropzoneStyle: React.CSSProperties = { 
-  border: '2px dashed #e2e8f0', borderRadius: '28px', padding: '60px', textAlign: 'center', 
-  cursor: 'pointer', backgroundColor: '#fff', transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+const predictionListContainer: React.CSSProperties = {
+  maxHeight: '350px', // Hadkan ketinggian (boleh adjust ikut suka)
+  overflowY: 'auto',   // Aktifkan scroll bila content lebih had
+  paddingRight: '4px', // Ruang sikit untuk scrollbar tak rapat sangat dengan content
+  marginRight: '-4px', // Offset padding balik
+  scrollbarWidth: 'thin', // Untuk browser macam Firefox
 };
+
+const dropzoneStyle: React.CSSProperties = { border: '2px dashed #e2e8f0', borderRadius: '28px', padding: '60px', textAlign: 'center', cursor: 'pointer', backgroundColor: '#fff', transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'};
 const activeDropzoneStyle: React.CSSProperties = { ...dropzoneStyle, borderColor: '#2563eb', backgroundColor: '#eff6ff', transform: 'scale(1.02)' };
 
 const tabBar: React.CSSProperties = { display: 'flex', gap: '12px', marginBottom: '24px', padding: '6px', background: '#f8fafc', borderRadius: '16px', width: 'fit-content' };
@@ -405,39 +410,10 @@ const inactiveTabBtn: React.CSSProperties = { ...baseTabBtn, backgroundColor: 't
 const badgeCount: React.CSSProperties = { backgroundColor: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', marginLeft: '6px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)' };
 
 // --- UPDATED TABLE STYLES ---
-const tableContainer: React.CSSProperties = { 
-  backgroundColor: '#fff', 
-  borderRadius: '24px', 
-  border: '1px solid #e2e8f0', 
-  overflow: 'hidden', 
-  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' 
-};
-
-const tableStyle: React.CSSProperties = { 
-  width: '100%', 
-  borderCollapse: 'collapse',
-  tableLayout: 'fixed' // Kunci layout table
-};
-
-const thStyle: React.CSSProperties = { 
-  textAlign: 'left', 
-  padding: '20px', 
-  fontSize: '11px', 
-  color: '#64748b', 
-  backgroundColor: '#f8fafc', 
-  fontWeight: 800, 
-  letterSpacing: '0.05em', 
-  borderBottom: '1px solid #e2e8f0' 
-};
-
-const tdStyle: React.CSSProperties = { 
-  padding: '20px', 
-  fontSize: '14px', 
-  borderBottom: '1px solid #f1f5f9',
-  // whiteSpace: 'nowrap',    // Elakkan teks turun bawah
-  //overflow: 'hidden',      // Sorok teks lebih
-  //textOverflow: 'ellipsis' // Letak "..." kalau panjang sangat
-};
+const tableContainer: React.CSSProperties = { backgroundColor: '#fff', borderRadius: '24px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' };
+const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse',tableLayout: 'fixed' };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '20px', fontSize: '11px', color: '#64748b', backgroundColor: '#f8fafc', fontWeight: 800, letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' };
+const tdStyle: React.CSSProperties = { padding: '20px', fontSize: '14px', borderBottom: '1px solid #f1f5f9',};
 const trStyle: React.CSSProperties = { cursor: 'pointer', transition: 'all 0.2s ease', position: 'relative' };
 const badgeStyle: React.CSSProperties = { padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 800, transition: 'all 0.3s ease' };
 
