@@ -30,6 +30,7 @@ DEPARTMENTS = [
     "Bahagian Kecerdasan Digital",
     "Bahagian Transformasi Digital",
     "Bahagian Perundingan ICT"
+    "Pasukan Inovasi Digital"
 ]
 
 @app.post("/classify")
